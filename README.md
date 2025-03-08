@@ -1,4 +1,4 @@
-# Spatial Modeling Algorithms for Reaction-Transport (SMART)
+# Spatial Modeling Algorithms for Reactions and Transport (SMART) Tutorial
 
 ## Installation
 
@@ -6,6 +6,7 @@ SMART has been installed and tested on Linux for AMD, ARM, and x86_64 systems, p
 On Windows devices, we recommend using Windows Subsystem for Linux to run the provided docker image (see below).
 SMART has also been tested on Mac OS using docker.
 Installation using docker should take less than 30 minutes on a normal desktop computer.
+For more details on SMART, please see the [main SMART repository](https://github.com/RangamaniLabUCSD/smart).
 
 ### Using Docker (recommended)
 
@@ -53,15 +54,65 @@ python3 examples/convert_notebooks_to_python.py
 ```
 to convert all notebooks to python files. **NOTE** this command overwrites existing files.
 
+### Singularity installation (recommended for shared servers)
+
+In some cases (such as on shared servers), it may not be possible to use docker to run `smart` due to the requirement for root privileges to run docker.
+An easy workaround involves using the alternative containerization software, Singularity.
+The following strategy still builds from the Docker image, but allows you to build a Singularity container on your local system that can be transferred readily to a directory on your shared server.
+
+1. If you do not have Singularity installed, follow the instructions at https://sylabs.io/guides/latest/admin-guide/installation.html on your local machine and on the shared server.
+2. Write a singularity definition file using the SMART docker image, should include the following:
+    ```
+    Bootstrap: docker
+    From: ghcr.io/rangamanilabucsd/smart:latest
+    %post
+        # install other tools if needed for your purposes
+    %runscript
+        echo "Welcome to the SMART Singularity container"
+        exec /bin/bash -i "$@"
+        source $FENICS_HOME/.bashrc
+    %environment
+        # set desired environment variables
+        export FENICS_HOME=/root
+        export PYTHONPATH=$PYTHONPATH:$SMARTDIR # set this if you mount a local version of SMART in SMARTDIR
+        export HOME=$FENICS_HOME
+        export DIJITSO_CACHE_DIR=/root/tmp # tmp files will be written to here during FEM assembly
+        export MPLCONFIGDIR=/root/tmp # for use of MATPLOTLIB
+        export RDMAV_FORK_SAFE=True # req'd for some parallelization
+    ```
+3. Build singularity container on a local machine where you have root access: 
+    ```
+    sudo singularity build smart.sif singularity-recipe.def
+    ```
+    where singularity-recipe.def is a text file containing the above recipe.
+4. Transfer smart.sif to the server you wish to run on (e.g. using rsync).
+5. Login to the server and run the Singularity container. The following lines mount the env var TMPDIR as the tmp directory in the singularity container and mounts HOME at /root/shared in the container (for access to your scripts, saving files, etc.). You may wish to mount additional directories which can easily be appended to the singularity run or singularity exec call. \
+For an interactive job use:
+    ```
+    singularity run --bind $HOME:/root/shared,$TMPDIR:/root/tmp smart.sif
+    ```
+    In a bash script, you can call the singularity container and your script using:
+    ```
+    singularity exec --bind $HOME:/root/shared,$TMPDIR:/root/tmp smart.sif python3 /path_to_python_script.py
+    ```
+    In certain cases, it may be useful to provide `--cleanenv` as an option when running. This and other details can be found within the [Singularity documentation](https://docs.sylabs.io/guides/3.1/user-guide/cli/singularity.html#singularity).
+
+
 ### Using pip
 `fenics-smart` is also available on [pypi](https://pypi.org/project/fenics-smart/) and can be installed with
 ```
 python3 -m pip install fenics-smart
 ```
-However this requires FEniCS version 2019.2.0 or later to already be installed. Currently, FEniCS version 2019.2.0 needs to be built [from source](https://bitbucket.org/fenics-project/dolfin/src/master/) or use some of the [pre-built docker images](https://github.com/orgs/scientificcomputing/packages?repo_name=packages)
+However this requires FEniCS version 2019.2.0 or later to already be installed. Currently, FEniCS version 2019.2.0 needs to be built [from source](https://bitbucket.org/fenics-project/dolfin/src/master/) or use some of the [pre-built docker images](https://github.com/orgs/scientificcomputing/packages?repo_name=packages). It is also possible to use Spack to install a development version of FEniCS on shared servers (sample recipe [here](https://gist.github.com/finsberg/a2d1b62dc57763173ba045551090a2ee)).
 
-## Example usage
-The SMART repository contains a number of examples in the `examples` directory which also run as continuous integration tests (see "Automated Tests" below):
+## Getting started with SMART
+
+A minimal example can be accessed ON [this page](https://rangamanilabucsd.github.io/smart/docs/getting_started.html) and is also included (with some variants) within this repository.
+Once you have followed the above instructions to install SMART, you can download this repository and place it in a mounted folder within your Docker or singularity container.
+You can then run `smart_minimal.ipynb` within the container, either from the terminal or from within an attached window of VS Code.
+To run as a python file, you should first convert the Jupyter notebook using `jupyter nbconvert --to script smart_minimal.ipynb` from within the repository folder.
+
+The SMART repository contains a number of additional examples in the `examples` directory which also run as continuous integration tests. Within any of the installed containers, these can be accessed in `/repo/examples` and run locally.
 * [Example 1](https://rangamanilabucsd.github.io/smart/examples/example1/example1.html): Formation of Turing patterns in 2D reaction-diffusion (rectangular domain)
 * [Example 2](https://rangamanilabucsd.github.io/smart/examples/example2/example2.html): Simple cell signaling model in 2D (ellipse)
 * [Example 2 - 3D](https://rangamanilabucsd.github.io/smart/examples/example2-3d/example2-3d.html): Simple cell signaling model in 3D (realistic spine geometry)
