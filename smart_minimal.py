@@ -38,14 +38,13 @@ import dolfin as d
 from matplotlib import pyplot as plt
 
 
-# SMART also requires the user to specify units, utilizing the `pint` Python module. Mostly any units you want will be in `smart.units.unit`:
+# SMART also requires the user to specify units, utilizing the `pint` Python module. Most conventional units can be found in `smart.units.unit`, or custom units can be defined if needed.
 
 # In[ ]:
 
 
 D_unit = unit.um**2 / unit.s
 conc_unit = unit.molecule / unit.um**2
-surf_var = Compartment("surf", 2, unit.um, 1)
 
 
 # Following these preliminary steps, we begin the basic workflow of SMART:
@@ -126,15 +125,15 @@ results = d.XDMFFile(model_cur.mpi_comm_world, "A.xdmf")
 results.parameters["flush_output"] = True
 results.write(model_cur.sc["A"].sol, model_cur.t)
 dx = d.Measure("dx", domain=model_cur.cc["surf"].dolfin_mesh)
-int_val = d.assemble(model_cur.sc["A"].sol*dx)
-volume = d.assemble(1.0*dx)
+int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
+volume = d.assemble_mixed(1.0*dx)
 avg_A = [int_val / volume]
 logger.setLevel(logging.WARNING)
 while True:
     model_cur.monolithic_solve()
     print(f"Done with t = {model_cur.t}")
     results.write(model_cur.sc["A"].sol, model_cur.t)
-    int_val = d.assemble(model_cur.sc["A"].sol*dx)
+    int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
     avg_A.append(int_val / volume)
     if model_cur.t >= model_cur.final_t:
         break
@@ -148,7 +147,7 @@ while True:
 visualization.plot(model_cur.sc['A'].u['u'])
 
 
-# Finally, we also note that certain data analysis tasks, such as tracking the average concentration over time by integrating at each time step, can be easily done using built-in DOLFIN function in the Python script. For instance, in the above script, we used `d.assemble` to integrate A over the surface when computing the average at each time point. In an interactive setting, we can visualize these results using matplotlib; for example:
+# Finally, we also note that certain data analysis tasks, such as tracking the average concentration over time by integrating at each time step, can be easily done using built-in DOLFIN function in the Python script. For instance, in the above script, we used `d.assemble_mixed` to integrate A over the surface when computing the average at each time point. In an interactive setting, we can visualize these results using matplotlib; for example:
 
 # In[ ]:
 
@@ -214,14 +213,14 @@ results = d.XDMFFile(model_cur.mpi_comm_world, "A.xdmf")
 results.parameters["flush_output"] = True
 results.write(model_cur.sc["A"].sol, model_cur.t)
 dx = d.Measure("dx", domain=model_cur.cc["surf"].dolfin_mesh)
-volume = d.assemble(1.0*dx)
-int_val = d.assemble(model_cur.sc["A"].sol*dx)
+volume = d.assemble_mixed(1.0*dx)
+int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
 avg_A = [int_val/volume]
 while True:
     model_cur.monolithic_solve()
     print(f"Done with t = {model_cur.t}")
     results.write(model_cur.sc["A"].sol, model_cur.t)
-    int_val = d.assemble(model_cur.sc["A"].sol*dx)
+    int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
     avg_A.append(int_val / volume)
     if model_cur.t >= model_cur.final_t:
         break
@@ -278,15 +277,15 @@ for species_name, species in model_cur.sc.items:
     results[species_name].parameters["flush_output"] = True
     results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
 dx = d.Measure("dx", domain=model_cur.cc["surf"].dolfin_mesh)
-volume = d.assemble(1.0*dx)
-int_val = d.assemble(model_cur.sc["A"].sol*dx)
+volume = d.assemble_mixed(1.0*dx)
+int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
 avg_A = [int_val/volume]
 while True:
     model_cur.monolithic_solve()
     print(f"Done with t = {model_cur.t}")
     for species_name, species in model_cur.sc.items:
         results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
-    int_val = d.assemble(model_cur.sc["A"].sol*dx)
+    int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
     avg_A.append(int_val / volume)
     if model_cur.t >= model_cur.final_t:
         break
@@ -297,9 +296,9 @@ plt.ylabel('A concentration $\mathrm{(molecules/μm^2)}$')
 plt.show()
 
 
-# ## Part 3: Cells aren't squares
+# ## Part 3: Biological cells aren't squares
 # 
-# We talk a lot about how cells are not spherical cows (and they certainly are not two dimensional). So we can consider a slightly more nuanced case of an ellipsoid, which can easily be meshed using existing functions in SMART. Note that all units need to be adjusted to the 3D case here, but we can still utilize the same model. I recommend restarting the kernel to clear the previous version of the model, then reimporting the modules here.
+# Cells are not spherical cows (and they certainly are not two dimensional). So we can consider a slightly more nuanced case of an ellipsoid, which can easily be meshed using existing functions in SMART. Note that all units need to be adjusted to the 3D case here, but we can still utilize the same model. I recommend restarting the kernel to clear the previous version of the model, then reimporting the modules here.
 
 # In[ ]:
 
@@ -365,14 +364,14 @@ for species_name, species in model_cur.sc.items:
     results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
 avg_A = [A_var.initial_condition]
 dx = d.Measure("dx", domain=model_cur.cc["cyto"].dolfin_mesh)
-volume = d.assemble(1.0*dx)
+volume = d.assemble_mixed(1.0*dx)
 logger.setLevel(logging.WARNING) # suppress excessive output
 while True:
     model_cur.monolithic_solve()
     print(f"Done with t = {model_cur.t}")
     for species_name, species in model_cur.sc.items:
         results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
-    int_val = d.assemble(model_cur.sc["A"].sol*dx)
+    int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
     avg_A.append(int_val / volume)
     if model_cur.t >= model_cur.final_t:
         break
@@ -389,6 +388,7 @@ plt.show()
 # * Parameters that vary over space and time
 # * Curvature-dependent initial conditions and reactions
 # * Axisymmetric assumption
+# * Advection (in development)
 # 
 # Below, we demonstrate use of a spatially varying parameter and curvature-dependent reactions. Curvature-dependent conditions are also shown in `example2_withcurv.ipynb` in the `smart` repository. Temporally varying parameters and adaptive time-stepping are included in `example6.ipynb` and the axisymmetric feature is included in `example3_withaxisymm`.
 # 
@@ -416,7 +416,7 @@ parent_mesh = mesh.ParentMesh(mesh_filename=mesh_file,
 
 # Now rerun the simulation with a curvature-sensitive reaction rate in `r2` (`curv_sens = True`) and/or a spatially dependent `kon` (`spatial_param = True`).
 
-# In[6]:
+# In[ ]:
 
 
 curv_sens = True
@@ -467,13 +467,13 @@ for species_name, species in model_cur.sc.items:
 d.File("curv.pvd") << model_cur.mf0_to_fun(mf_curv, A_bound_var.V)
 avg_A = [A_var.initial_condition]
 dx = d.Measure("dx", domain=model_cur.cc["cyto"].dolfin_mesh)
-volume = d.assemble(1.0*dx)
+volume = d.assemble_mixed(1.0*dx)
 while True:
     model_cur.monolithic_solve()
     print(f"Done with t = {model_cur.t}")
     for species_name, species in model_cur.sc.items:
         results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
-    int_val = d.assemble(model_cur.sc["A"].sol*dx)
+    int_val = d.assemble_mixed(model_cur.sc["A"].sol*dx)
     avg_A.append(int_val / volume)
     if model_cur.t >= model_cur.final_t:
         break
@@ -481,4 +481,182 @@ plt.plot(model_cur.tvec, avg_A)
 plt.xlabel('Time (s)')
 plt.ylabel('A concentration $\mathrm{(molecules/μm^2)}$')
 plt.show()
+
+
+# ## Part 5: Worked example with diffusion of chemoattractant
+# 
+# In this final section, we turn our attention to a reaction-diffusion problem previously applied to the diffusion of chemoattractant from a spherical source [Heinrich et al 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5445147/).
+# In contrast to the previous tests, we now consider diffusion through the extracellular space.
+# Considering a chemoattractant molecule of concentration $c$, the governing equations are:
+# 
+# $$
+# \frac{\partial c}{\partial t} = D_A \nabla^2 c - k_{decay} c \quad \text{in} ~ \Omega_{EC} \\
+# D_c \nabla c \cdot \mathbf{n} = -j_0 \quad \text{on} ~ \Gamma_{source}
+# $$
+# 
+# There also exists a Dirichlet-type boundary condition stating that the concentration goes to zero at far distances from the source.
+# We approximate this by including a large extracellular domain with the boundary condition:
+# 
+# $$
+# D_c \nabla c \cdot \mathbf{n} = -D_c (0-c) \quad \text{on} ~ \Gamma_{outer}
+# $$
+# 
+# The basic problem in SMART can be configured much as in the previous examples:
+
+# In[ ]:
+
+
+from smart import config, mesh, model, mesh_tools, visualization
+from smart.units import unit
+from smart.model_assembly import (
+    Compartment,
+    Parameter,
+    Reaction,
+    Species,
+    SpeciesContainer,
+    ParameterContainer,
+    CompartmentContainer,
+    ReactionContainer,
+)
+import logging
+logger = logging.getLogger("smart")
+import dolfin as d
+from matplotlib import pyplot as plt
+import pathlib
+import numpy as np
+
+axisymm = False
+if axisymm:
+    z0 = 50.0
+    AR = 2.0
+    dmesh, facet_markers, cell_markers = mesh_tools.create_2Dcell(outerExpr=f"(r/{z0})**2 + ((z-{z0})/{z0})**2 - 1",
+                                        innerExpr=f"(r/(5*{AR**(1/3)}))**2 + ((z-{z0})/(5*{AR**(1/3)}))**2 - 1",
+                                        hEdge=5.0, hInnerEdge=0.05, outer_marker=10, interface_marker=11,
+                                        outer_tag=1, half_cell=True)
+else:
+    z0 = 0.0
+    dmesh, facet_markers, cell_markers = mesh_tools.create_multicell(cubeSize=50, locVec1=[[0,0,0]],
+                                                  cellRad1=[5.0,5.0,5.0], hCube=5.0, hCell=0.5, 
+                                                  interface_marker1=11, outer_marker=10,
+                                                  extracell_tag=1)
+    # dmesh, facet_markers, cell_markers = mesh_tools.create_spheres(outerRad=20.0, innerRad=5.0,
+    #                                             hEdge=2.0, hInnerEdge=0.5, interface_marker=11,
+    #                                             outer_marker=10, outer_vol_tag=1, inner_vol_tag=2)
+
+mesh_tools.write_mesh(dmesh, facet_markers, cell_markers, "extracell.h5")
+mesh_file = "extracell.h5"
+D_unit = unit.um**2 / unit.s
+conc_unit = unit.molecule / unit.um**3
+surf_unit = unit.molecule / unit.um**2
+if axisymm:
+    EC_var = Compartment("EC", 2, unit.um, 1)
+    source_var = Compartment("source", 1, unit.um, 11)
+    outer_var = Compartment("outer", 1, unit.um, 10)
+else:
+    EC_var = Compartment("EC", 3, unit.um, 1, vel=[0.0,0.0,0.0])
+    source_var = Compartment("source", 2, unit.um, 11)
+    outer_var = Compartment("outer", 2, unit.um, 10)
+c_var = Species("c", 0, conc_unit, 130.0, D_unit, "EC")
+kdecay_var = Parameter("kdecay", 0.011, 1/unit.s)
+r_decay = Reaction("r_decay", ["c"], [], param_map={"k":"kdecay"},
+                    species_map={"c":"c"}, eqn_f_str="k*c")
+j0_var = Parameter("j0", 100.0, surf_unit/unit.s)
+r_release = Reaction("r_release", [], ["c"],
+                     param_map={"j0":"j0"}, eqn_f_str="j0",
+                     explicit_restriction_to_domain="source")
+# jout_var = Parameter("jout", c_var.D/10.0, unit.um/unit.s)
+# r_outer = Reaction("r_outer", ["c"], [],
+#                    param_map={"jout":"jout"}, eqn_f_str="c*jout",
+#                    explicit_restriction_to_domain="outer")
+# create containers
+cc = CompartmentContainer()
+cc.add([EC_var, source_var])#, outer_var])
+sc = SpeciesContainer()
+sc.add([c_var])
+pc = ParameterContainer()
+pc.add([kdecay_var, j0_var])#, jout_var])
+rc = ReactionContainer()
+rc.add([r_decay, r_release])#, r_outer])
+parent_mesh = mesh.ParentMesh(mesh_filename=mesh_file, mesh_filetype="hdf5", name="parent_mesh")
+config_cur = config.Config()
+model_cur = model.Model(pc, sc, cc, rc, config_cur, parent_mesh)
+config_cur.solver.update({"final_t": 1.0, "initial_dt": 0.05})
+config_cur.flags.update({"axisymmetric_model": axisymm})
+model_cur.initialize()
+results = dict()
+results_folder = pathlib.Path("extracell_results")
+results_folder.mkdir(exist_ok=True)
+for species_name, species in model_cur.sc.items:
+    results[species_name] = d.XDMFFile(model_cur.mpi_comm_world, 
+                                       str(results_folder / f"{species_name}.xdmf"))
+    results[species_name].parameters["flush_output"] = True
+    results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
+
+class ROI(d.SubDomain):
+    def inside(self, x, on_boundary):
+        rcur = np.sqrt(x[0]**2 + x[1]**2 + (x[2]-z0)**2)
+        return (rcur > 6.0) and (rcur < 8.0)
+if axisymm:
+    mf_int = d.MeshFunction("size_t", model_cur.cc["EC"].dolfin_mesh, 2, 0)
+else:
+    mf_int = d.MeshFunction("size_t", model_cur.cc["EC"].dolfin_mesh, 3, 0)
+roiDef = ROI()
+roiDef.mark(mf_int, 1) # mark roi with 1
+dx = d.Measure("dx", domain=model_cur.cc["EC"].dolfin_mesh, subdomain_data=mf_int)
+# dx_source = d.Measure("dx", domain=model_cur.cc["source"].dolfin_mesh)
+if axisymm:
+    xEC = d.SpatialCoordinate(model_cur.cc["EC"].dolfin_mesh)
+    volume = d.assemble_mixed(xEC[0]*dx)
+    avg_c = [d.assemble_mixed(model_cur.sc["c"].sol*xEC[0]*dx)/volume]
+    roi_vol = d.assemble_mixed(xEC[0]*dx(1))
+    c_roi = [d.assemble_mixed(model_cur.sc["c"].sol*xEC[0]*dx(1))/roi_vol]
+else:
+    volume = d.assemble_mixed(1.0*dx)
+    avg_c = [d.assemble_mixed(model_cur.sc["c"].sol*dx)/volume]
+    roi_vol = d.assemble_mixed(1.0*dx(1))
+    c_roi = [d.assemble_mixed(model_cur.sc["c"].sol*dx(1))/roi_vol]
+logger.setLevel(logging.WARNING) # suppress excessive output
+while True:
+    model_cur.monolithic_solve()
+    print(f"Done with t = {model_cur.t}")
+    for species_name, species in model_cur.sc.items:
+        results[species_name].write(model_cur.sc[species_name].sol, model_cur.t)
+    if axisymm:
+        avg_c.append(d.assemble_mixed(model_cur.sc["c"].sol*xEC[0]*dx) / volume)
+        c_roi.append(d.assemble_mixed(model_cur.sc["c"].sol*xEC[0]*dx(1))/roi_vol)
+    else:
+        avg_c.append(d.assemble_mixed(model_cur.sc["c"].sol*dx) / volume)
+        c_roi.append(d.assemble_mixed(model_cur.sc["c"].sol*dx(1))/roi_vol)
+    if model_cur.t >= model_cur.final_t:
+        break
+
+
+# In[ ]:
+
+
+import numpy as np
+from scipy.special import erfc
+# now plot and compare to analytical solution
+plt.plot(model_cur.tvec, avg_c)
+plt.plot(model_cur.tvec, c_roi)
+# analytical solution at source membrane
+t = np.array([float(val) for val in model_cur.tvec])
+t[0] = 1e-6
+j0 = j0_var.value
+R = 5.0
+dr = 1.0
+D = c_var.D
+k = kdecay_var.value
+multFactor = j0*R**2/(dr + R)
+term1 = (1/(2*(D+R*np.sqrt(D*k))))*np.exp(-dr/np.sqrt(D/k))*erfc(dr/(2*np.sqrt(D*t)) - np.sqrt(k*t))
+term2 = (1/(2*(D-R*np.sqrt(D*k))))*np.exp(dr/np.sqrt(D/k))*erfc(dr/(2*np.sqrt(D*t)) + np.sqrt(k*t))
+term3 = (-1/(D-k*R**2))*np.exp(dr/R + (D/R**2 - k)*t)*erfc(dr/(2*np.sqrt(D*t)) + np.sqrt(D*t)/R)
+cAnalytical = multFactor*(term1 + term2 + term3)
+plt.plot(t, cAnalytical)
+
+plt.xlabel('Time (s)')
+plt.ylabel('c concentration $\mathrm{(molecules/μm^3)}$')
+plt.show()
+
+visualization.plot(model_cur.sc["c"].sol, clip_plane=(0, 0, 1))
 
