@@ -21,17 +21,18 @@ folder5 = pathlib.Path("part5")
 folder5.mkdir(exist_ok=True)
 
 axisymm = True
-AR = 1.0
+AR = SET ASPECT RATIO HERE
+sourceRad = SET SOURCE RADIUS HERE
 if axisymm:
     z0 = 50.0
     dmesh, facet_markers, cell_markers = mesh_tools.create_2Dcell(outerExpr=f"(r/{z0})**2 + ((z-{z0})/{z0})**2 - 1",
-                                        innerExpr=f"(r/(5*{AR**(1/3)}))**2 + ((z-{z0})/(5*{AR**(-2/3)}))**2 - 1",
+                                        innerExpr=f"(r/({sourceRad}*{AR**(1/3)}))**2 + ((z-{z0})/({sourceRad}*{AR**(-2/3)}))**2 - 1",
                                         hEdge=5.0, hInnerEdge=0.05, outer_marker=10, interface_marker=11,
                                         outer_tag=1, half_cell=True)
 else:
     z0 = 0.0
     dmesh, facet_markers, cell_markers = mesh_tools.create_multicell(cubeSize=50, locVec1=[[0,0,0]],
-                                                  cellRad1=[5.0*AR**(1/3),5.0*AR**(1/3),5.0*AR**(-2/3)], 
+                                                  cellRad1=[sourceRad*AR**(1/3),sourceRad*AR**(1/3),sourceRad*AR**(-2/3)], 
                                                   hCube=5.0, hCell=0.5, 
                                                   interface_marker1=11, outer_marker=10,
                                                   extracell_tag=1)
@@ -45,7 +46,7 @@ if axisymm:
     source_var = Compartment("source", 1, unit.um, 11)
     outer_var = Compartment("outer", 1, unit.um, 10)
 else:
-    EC_var = Compartment("EC", 3, unit.um, 1)#, vel=[0.0,0.0,0.0])
+    EC_var = Compartment("EC", 3, unit.um, 1, vel=[SET VELOCITY HERE (ex: [0.0,0.0,0.0] or ["y","0","0"])])
     source_var = Compartment("source", 2, unit.um, 11)
     outer_var = Compartment("outer", 2, unit.um, 10)
 c_var = Species("c", 0, conc_unit, 130.0, D_unit, "EC")
