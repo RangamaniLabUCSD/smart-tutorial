@@ -25,7 +25,7 @@ sourceRad = [5.0*AR1**(1/3),5.0*AR1**(1/3),5.0*AR1**(-2/3)]
 sourceLoc = [[0,0,0]]
 
 AR2 = 1.0
-otherCellRad = [5.0*AR1**(1/3),5.0*AR1**(1/3),5.0*AR1**(-2/3)]
+otherCellRad = [5.0*AR2**(1/3),5.0*AR2**(1/3),5.0*AR2**(-2/3)]
 otherCellLoc = [[DEFINE ADDITIONAL LOCATIONS HERE]] 
 otherCellRad = len(otherCellLoc)*[otherCellRad]
 
