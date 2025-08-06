@@ -22,7 +22,7 @@ folder5.mkdir(exist_ok=True)
 
 AR = 1.5
 radVec = [5.0*AR**(1/3),5.0*AR**(1/3),5.0*AR**(-2/3)]
-locVec1 = [[0,0,0], [10,10,10], [-18,-18,-18]] # DEFINE ADDITIONAL LOCATIONS HERE
+locVec1 = [[0,0,0], DEFINE ADDITIONAL LOCATIONS HERE] 
 cellRad1 = len(locVec1)*[radVec]
 dmesh, facet_markers, cell_markers = mesh_tools.create_multicell(cubeSize=50, locVec1=locVec1,
                                                   cellRad1=cellRad1, 

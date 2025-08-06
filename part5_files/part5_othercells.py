@@ -26,7 +26,7 @@ sourceLoc = [[0,0,0]]
 
 AR2 = 1.0
 otherCellRad = [5.0*AR1**(1/3),5.0*AR1**(1/3),5.0*AR1**(-2/3)]
-otherCellLoc = [[6,6,6]] # DEFINE ADDITIONAL LOCATIONS HERE
+otherCellLoc = [[DEFINE ADDITIONAL LOCATIONS HERE]] 
 otherCellRad = len(otherCellLoc)*[otherCellRad]
 
 dmesh, facet_markers, cell_markers = mesh_tools.create_multicell(
