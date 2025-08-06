@@ -42,7 +42,7 @@ D_unit = unit.um**2 / unit.s
 conc_unit = unit.molecule / unit.um**3
 surf_unit = unit.molecule / unit.um**2
 if axisymm:
-    EC_var = Compartment("EC", 2, unit.um, 1)
+    EC_var = Compartment("EC", 2, unit.um, 1, vel=[SET VELOCITY HERE (ex: [0.0,0.0,0.0] or ["y","0","0"])])
     source_var = Compartment("source", 1, unit.um, 11)
     outer_var = Compartment("outer", 1, unit.um, 10)
 else:
